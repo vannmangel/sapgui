@@ -112,9 +112,9 @@ Try {
         [string]$installPhase = 'Pre-Installation'
 		
         ## Show Welcome Message, close Internet Explorer if required, allow up to 3 deferrals, verify there is enough disk space to complete the install, and persist the prompt
-		if (get-process sapgui){
+        if (get-process sapgui) {
             Show-InstallationWelcome -CloseApps 'sapgui' -AllowDefer -DeferTimes 3 -CheckDiskSpace -PersistPrompt -CustomText "Hei! Vi ser at prosessen for SAP GUI fortsatt kjører.`nVennligst lukk SAP GUI og forsøk på nytt."
-		}
+        }
         
 		
         ## Show Progress Message (with the default message)
@@ -135,9 +135,12 @@ Try {
         }
 		
         ## <Perform Installation tasks here>
-        Execute-Process -Path "$dirFiles\$(gci sap*).exe" -Parameters '/silent'
-		Show-InstallationProgress -StatusMessage 'Installerer oppdateringer til SAP GUI...'
-        Execute-Process -Path "$dirFiles\$(gci patch*).exe" -Parameters '/silent'
+        gci $dirFiles -ov exeFiles
+        $sap = $exeFiles | ? Name -like "SAP*"
+        $patch = $exeFiles | ? Name -like "patch*"
+        Execute-Process -Path "$dirFiles\$($sap).name" -Parameters '/silent'
+        Show-InstallationProgress -StatusMessage 'Installerer oppdateringer til SAP GUI...'
+        Execute-Process -Path "$dirFiles\$($patch).name" -Parameters '/silent'
 		
         ##*===============================================
         ##* POST-INSTALLATION
