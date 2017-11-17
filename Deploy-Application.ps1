@@ -161,9 +161,9 @@ Try {
         ## <Perform Post-Installation tasks here>
         Copy-File "$dirFiles\saplogon.ini" -Destination "C:\users\$((get-loggedonuser | ? SessionName -eq 'Console').username)\AppData\Roaming\SAP\Common"
         ## Display a message at the end of the install
-        #If (-not $useDefaultMsi) { 
-        #    #Show-InstallationPrompt -Message 'You can customize text to appear at the end of an install or remove it completely for unattended installations.' -ButtonRightText 'OK' -Icon Information -NoWait 
-        #}
+        If (-not $useDefaultMsi) { 
+            Show-InstallationPrompt -Message 'Installasjonen er ferdig!' -ButtonRightText 'OK' -Icon Information -NoWait 
+        }
     }
     ElseIf ($deploymentType -ieq 'Uninstall') {
         ##*===============================================
