@@ -159,7 +159,7 @@ Try {
         [string]$installPhase = 'Post-Installation'
 		
         ## <Perform Post-Installation tasks here>
-        Copy-File "$dirFiles\saplogon.ini" -Destination "C:\users\$((get-loggedonuser | ? SessionName -eq 'Console').username)\AppData\Roaming\SAP\Common"
+        Copy-File "$dirFiles\saplogon.ini" -Destination "C:\users\$((get-loggedonuser | ? IsCurrentSession -eq $true).username)\AppData\Roaming\SAP\Common"
         ## Display a message at the end of the install
         If (-not $useDefaultMsi) { 
             Show-InstallationPrompt -Message 'Installasjonen er ferdig!' -ButtonRightText 'OK' -Icon Information -NoWait 
@@ -172,8 +172,8 @@ Try {
         [string]$installPhase = 'Pre-Uninstallation'
 		
         ## Show Welcome Message, close Internet Explorer with a 60 second countdown before automatically closing
-        if (get-process sapgui -ErrorAction SilentlyContinue) {
-            Show-InstallationWelcome -CloseApps 'sapgui' -AllowDefer -DeferTimes 3 -CheckDiskSpace -PersistPrompt -CustomText "Hei! Vi ser at prosessen for SAP GUI fortsatt kjører.`nVennligst lukk SAP GUI og forsøk på nytt."
+        if (get-process sapgui,saplogon -ErrorAction SilentlyContinue) {
+            Show-InstallationWelcome -CloseApps 'sapgui,saplogon'
         }
 		
         ## Show Progress Message (with the default message)
@@ -207,7 +207,7 @@ Try {
 		
         ## <Perform Post-Uninstallation tasks here>
         #move log files to appdata
-        Copy-File -Path "${env:ProgramFiles(x86)}\SAP\SAPSetup\LOGs" -Destination "C:\users\$((get-loggedonuser | ? SessionName -eq 'Console').username)\AppData\Roaming\SAP\Logs" -Recurse
+        Copy-File -Path "${env:ProgramFiles(x86)}\SAP\SAPSetup\LOGs" -Destination "C:\users\$((get-loggedonuser | ? IsCurrentSession -eq $true).username)\AppData\Roaming\SAP\Logs" -Recurse
         #cleanup in program files		
         Remove-item -Path "${env:ProgramFiles(x86)}\SAP\" -Recurse
         #remove saplogon.ini from appdata
