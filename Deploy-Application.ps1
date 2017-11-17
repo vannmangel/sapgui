@@ -214,10 +214,8 @@ Try {
         #cleanup in program files		
         Remove-item -Path "${env:ProgramFiles(x86)}\SAP\" -Recurse
         #remove saplogon.ini from appdata
-        Remove-Item "C:\users\$((get-loggedonuser | ? SessionName -eq 'Console').username)\AppData\Roaming\SAP\Common\saplogon.ini"
-		
-		
-		
+        Remove-Item "C:\users\$((get-loggedonuser | ? IsCurrentSession -eq $true).username)\AppData\Roaming\SAP\Common\saplogon.ini"
+	
     }
 	
 	##*===============================================
