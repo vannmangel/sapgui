@@ -117,8 +117,11 @@ Try {
             Execute-ProcessAsUser -path "$env:windir\system32\notepad.exe"
             Show-InstallationWelcome -CloseApps 'iexplore' -AllowDefer -DeferTimes 3 -CloseAppsCountdown 3600 
         }
-        if (get-process sapgui,saplogon -ErrorAction SilentlyContinue) {
-            Show-InstallationWelcome -CloseApps 'sapgui,saplogon' -AllowDefer -DeferTimes 3  -CloseAppsCountdown 3600
+        if (get-process sapgui, saplogon -ErrorAction SilentlyContinue) {
+            Show-InstallationWelcome -CloseApps 'sapgui,saplogon' -AllowDefer -DeferTimes 3  -CloseAppsCountdown 3600 -BlockExecution
+        }
+        elseif (!$test) {
+            Show-InstallationWelcome -AllowDefer -DeferTimes 3  -CloseAppsCountdown 3600
         }
         
 		
@@ -147,7 +150,7 @@ Try {
         $sap = $exeFiles | ? Name -like "SAP_GUI*"
         $patch = $exeFiles | ? Name -like "patch*"
         Execute-Process -Path "$dirFiles\$($sap)" -Parameters '/silent'
-        Show-InstallationProgress -StatusMessage 'Installerer oppdateringer til SAP GUI...'
+        Show-InstallationProgress -StatusMessage "Installerer oppdateringer til $appvendor $appname $appversion"
         Execute-Process -Path "$dirFiles\$($patch)" -Parameters '/silent'
 		
         ##*===============================================
