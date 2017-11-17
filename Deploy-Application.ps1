@@ -115,10 +115,10 @@ Try {
         ## Show Welcome Message, close Internet Explorer if required, allow up to 3 deferrals, verify there is enough disk space to complete the install, and persist the prompt
         if ($test) {
             Execute-ProcessAsUser -path "$env:windir\system32\notepad.exe"
-            Show-InstallationWelcome -CloseApps 'iexplore' -AllowDefer -DeferTimes 3 -CheckDiskSpace -PersistPrompt -CloseAppsCountdown 3600 -CustomText "Hei! Vi ser at prosessen for SAP GUI fortsatt kjører.`nVennligst lukk SAP GUI og forsøk på nytt."
-		}
+            Show-InstallationWelcome -CloseApps 'iexplore' -AllowDefer -DeferTimes 3 -CloseAppsCountdown 3600 
+        }
         if (get-process sapgui -ErrorAction SilentlyContinue) {
-            Show-InstallationWelcome -CloseApps 'sapgui' -AllowDefer -DeferTimes 3 -CheckDiskSpace -PersistPrompt -CloseAppsCountdown 3600 -CustomText "Hei! Vi ser at prosessen for SAP GUI fortsatt kjører.`nVennligst lukk SAP GUI og forsøk på nytt."
+            Show-InstallationWelcome -CloseApps 'sapgui,saplogon' -AllowDefer -DeferTimes 3  -CloseAppsCountdown 3600
         }
         
 		
@@ -126,6 +126,8 @@ Try {
         Show-InstallationProgress -StatusMessage "Installerer $appvendor $appname $appversion"
 		
         ## <Perform Pre-Installation tasks here>
+        Stop-Process sapgui
+		Stop-Process saplogon
 		
 		
         ##*===============================================
