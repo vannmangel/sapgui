@@ -148,9 +148,11 @@ Try {
         [string]$installPhase = 'Post-Installation'
 		
         ## <Perform Post-Installation tasks here>
-        Copy-File "$dirFiles\saplogon.ini" -Destination "C:\users\$((get-loggedonuser).username)\AppData\Roaming\SAP\Common"
+        Copy-File "$dirFiles\saplogon.ini" -Destination "C:\users\$((get-loggedonuser | ? SessionName -eq 'Console').username)\AppData\Roaming\SAP\Common"
         ## Display a message at the end of the install
-        If (-not $useDefaultMsi) { Show-InstallationPrompt -Message 'You can customize text to appear at the end of an install or remove it completely for unattended installations.' -ButtonRightText 'OK' -Icon Information -NoWait }
+        #If (-not $useDefaultMsi) { 
+        #    #Show-InstallationPrompt -Message 'You can customize text to appear at the end of an install or remove it completely for unattended installations.' -ButtonRightText 'OK' -Icon Information -NoWait 
+        #}
     }
     ElseIf ($deploymentType -ieq 'Uninstall') {
         ##*===============================================
@@ -173,13 +175,17 @@ Try {
         [string]$installPhase = 'Uninstallation'
 		
         ## Handle Zero-Config MSI Uninstallations
-        If ($useDefaultMsi) {
-            [hashtable]$ExecuteDefaultMSISplat = @{ Action = 'Uninstall'; Path = $defaultMsiFile }; If ($defaultMstFile) { $ExecuteDefaultMSISplat.Add('Transform', $defaultMstFile) }
-            Execute-MSI @ExecuteDefaultMSISplat
-        }
+       #If ($useDefaultMsi) {
+       #    [hashtable]$ExecuteDefaultMSISplat = @{ Action = 'Uninstall'; Path = $defaultMsiFile }; If ($defaultMstFile) { $ExecuteDefaultMSISplat.Add('Transform', $defaultMstFile) }
+       #    Execute-MSI @ExecuteDefaultMSISplat
+       #}
 		
         # <Perform Uninstallation tasks here>
-		
+        $NwSapSetup = $env:ProgramFiles + '\SAP\SAPSetup\Setup\NWSAPSetup.exe'
+        if (Test-Path $NwSapSetup) {
+            Execute-Process -Path $NWSapSetup -Parameters '/uninstall /product=SRX+SCRIPTED+SCE+ECL+VEV3D+SAPDTS+KW+GUIISHMED+JNet+NWBCGUI+NWBC65+SAPGUI /TitleComponent:SAPGUI /IgnoreMissingProducts /Silent' -IgnoreExitCodes '129'	
+		}
+        
 		
         ##*===============================================
         ##* POST-UNINSTALLATION
