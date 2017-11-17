@@ -105,84 +105,88 @@ Try {
 	##* END VARIABLE DECLARATION
 	##*===============================================
 		
-	If ($deploymentType -ine 'Uninstall') {
-		##*===============================================
-		##* PRE-INSTALLATION
-		##*===============================================
-		[string]$installPhase = 'Pre-Installation'
+    If ($deploymentType -ine 'Uninstall') {
+        ##*===============================================
+        ##* PRE-INSTALLATION
+        ##*===============================================
+        [string]$installPhase = 'Pre-Installation'
 		
-		## Show Welcome Message, close Internet Explorer if required, allow up to 3 deferrals, verify there is enough disk space to complete the install, and persist the prompt
-		Show-InstallationWelcome -CloseApps 'iexplore' -AllowDefer -DeferTimes 3 -CheckDiskSpace -PersistPrompt
-		
-		## Show Progress Message (with the default message)
-		Show-InstallationProgress
-		
-		## <Perform Pre-Installation tasks here>
-		
-		
-		##*===============================================
-		##* INSTALLATION 
-		##*===============================================
-		[string]$installPhase = 'Installation'
-		
-		## Handle Zero-Config MSI Installations
-		If ($useDefaultMsi) {
-			[hashtable]$ExecuteDefaultMSISplat =  @{ Action = 'Install'; Path = $defaultMsiFile }; If ($defaultMstFile) { $ExecuteDefaultMSISplat.Add('Transform', $defaultMstFile) }
-			Execute-MSI @ExecuteDefaultMSISplat; If ($defaultMspFiles) { $defaultMspFiles | ForEach-Object { Execute-MSI -Action 'Patch' -Path $_ } }
+        ## Show Welcome Message, close Internet Explorer if required, allow up to 3 deferrals, verify there is enough disk space to complete the install, and persist the prompt
+		if (get-process sapgui){
+            Show-InstallationWelcome -CloseApps 'sapgui' -AllowDefer -DeferTimes 3 -CheckDiskSpace -PersistPrompt -CustomText "Hei! Vi ser at prosessen for SAP GUI fortsatt kjører.`nVennligst lukk SAP GUI og forsøk på nytt."
 		}
+        
 		
-		## <Perform Installation tasks here>
+        ## Show Progress Message (with the default message)
+        Show-InstallationProgress -StatusMessage 'Installerer SAP GUI...'
 		
-		
-		##*===============================================
-		##* POST-INSTALLATION
-		##*===============================================
-		[string]$installPhase = 'Post-Installation'
-		
-		## <Perform Post-Installation tasks here>
-		
-		## Display a message at the end of the install
-		If (-not $useDefaultMsi) { Show-InstallationPrompt -Message 'You can customize text to appear at the end of an install or remove it completely for unattended installations.' -ButtonRightText 'OK' -Icon Information -NoWait }
-	}
-	ElseIf ($deploymentType -ieq 'Uninstall')
-	{
-		##*===============================================
-		##* PRE-UNINSTALLATION
-		##*===============================================
-		[string]$installPhase = 'Pre-Uninstallation'
-		
-		## Show Welcome Message, close Internet Explorer with a 60 second countdown before automatically closing
-		Show-InstallationWelcome -CloseApps 'iexplore' -CloseAppsCountdown 60
-		
-		## Show Progress Message (with the default message)
-		Show-InstallationProgress
-		
-		## <Perform Pre-Uninstallation tasks here>
+        ## <Perform Pre-Installation tasks here>
 		
 		
-		##*===============================================
-		##* UNINSTALLATION
-		##*===============================================
-		[string]$installPhase = 'Uninstallation'
+        ##*===============================================
+        ##* INSTALLATION 
+        ##*===============================================
+        [string]$installPhase = 'Installation'
 		
-		## Handle Zero-Config MSI Uninstallations
-		If ($useDefaultMsi) {
-			[hashtable]$ExecuteDefaultMSISplat =  @{ Action = 'Uninstall'; Path = $defaultMsiFile }; If ($defaultMstFile) { $ExecuteDefaultMSISplat.Add('Transform', $defaultMstFile) }
-			Execute-MSI @ExecuteDefaultMSISplat
-		}
+        ## Handle Zero-Config MSI Installations
+        If ($useDefaultMsi) {
+            [hashtable]$ExecuteDefaultMSISplat = @{ Action = 'Install'; Path = $defaultMsiFile }; If ($defaultMstFile) { $ExecuteDefaultMSISplat.Add('Transform', $defaultMstFile) }
+            Execute-MSI @ExecuteDefaultMSISplat; If ($defaultMspFiles) { $defaultMspFiles | ForEach-Object { Execute-MSI -Action 'Patch' -Path $_ } }
+        }
 		
-		# <Perform Uninstallation tasks here>
+        ## <Perform Installation tasks here>
+        Execute-Process -Path "$dirFiles\$(gci sap*).exe" -Parameters '/silent'
+		Show-InstallationProgress -StatusMessage 'Installerer oppdateringer til SAP GUI...'
+        Execute-Process -Path "$dirFiles\$(gci patch*).exe" -Parameters '/silent'
+		
+        ##*===============================================
+        ##* POST-INSTALLATION
+        ##*===============================================
+        [string]$installPhase = 'Post-Installation'
+		
+        ## <Perform Post-Installation tasks here>
+        Copy-File "$dirFiles\saplogon.ini" -Destination "C:\users\$((get-loggedonuser).username)\AppData\Roaming\SAP\Common"
+        ## Display a message at the end of the install
+        If (-not $useDefaultMsi) { Show-InstallationPrompt -Message 'You can customize text to appear at the end of an install or remove it completely for unattended installations.' -ButtonRightText 'OK' -Icon Information -NoWait }
+    }
+    ElseIf ($deploymentType -ieq 'Uninstall') {
+        ##*===============================================
+        ##* PRE-UNINSTALLATION
+        ##*===============================================
+        [string]$installPhase = 'Pre-Uninstallation'
+		
+        ## Show Welcome Message, close Internet Explorer with a 60 second countdown before automatically closing
+        Show-InstallationWelcome -CloseApps 'iexplore' -CloseAppsCountdown 60
+		
+        ## Show Progress Message (with the default message)
+        Show-InstallationProgress
+		
+        ## <Perform Pre-Uninstallation tasks here>
 		
 		
-		##*===============================================
-		##* POST-UNINSTALLATION
-		##*===============================================
-		[string]$installPhase = 'Post-Uninstallation'
+        ##*===============================================
+        ##* UNINSTALLATION
+        ##*===============================================
+        [string]$installPhase = 'Uninstallation'
 		
-		## <Perform Post-Uninstallation tasks here>
+        ## Handle Zero-Config MSI Uninstallations
+        If ($useDefaultMsi) {
+            [hashtable]$ExecuteDefaultMSISplat = @{ Action = 'Uninstall'; Path = $defaultMsiFile }; If ($defaultMstFile) { $ExecuteDefaultMSISplat.Add('Transform', $defaultMstFile) }
+            Execute-MSI @ExecuteDefaultMSISplat
+        }
+		
+        # <Perform Uninstallation tasks here>
 		
 		
-	}
+        ##*===============================================
+        ##* POST-UNINSTALLATION
+        ##*===============================================
+        [string]$installPhase = 'Post-Uninstallation'
+		
+        ## <Perform Post-Uninstallation tasks here>
+		
+		
+    }
 	
 	##*===============================================
 	##* END SCRIPT BODY
