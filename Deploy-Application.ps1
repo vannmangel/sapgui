@@ -117,7 +117,7 @@ Try {
             Execute-ProcessAsUser -path "$env:windir\system32\notepad.exe"
             Show-InstallationWelcome -CloseApps 'iexplore' -AllowDefer -DeferTimes 3 -CloseAppsCountdown 3600 
         }
-        if (get-process sapgui -ErrorAction SilentlyContinue) {
+        if (get-process sapgui,saplogon -ErrorAction SilentlyContinue) {
             Show-InstallationWelcome -CloseApps 'sapgui,saplogon' -AllowDefer -DeferTimes 3  -CloseAppsCountdown 3600
         }
         
