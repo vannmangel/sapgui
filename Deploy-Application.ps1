@@ -181,7 +181,7 @@ Try {
        #}
 		
         # <Perform Uninstallation tasks here>
-        $NwSapSetup = $env:ProgramFiles + '\SAP\SAPSetup\Setup\NWSAPSetup.exe'
+        $NwSapSetup = ${env:ProgramFiles(x86)} + '\SAP\SAPSetup\Setup\NWSAPSetup.exe'
         if (Test-Path $NwSapSetup) {
             Execute-Process -Path $NWSapSetup -Parameters '/uninstall /product=SRX+SCRIPTED+SCE+ECL+VEV3D+SAPDTS+KW+GUIISHMED+JNet+NWBCGUI+NWBC65+SAPGUI /TitleComponent:SAPGUI /IgnoreMissingProducts /Silent' -IgnoreExitCodes '129'	
 		}
