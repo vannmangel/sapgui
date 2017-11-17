@@ -126,8 +126,8 @@ Try {
         Show-InstallationProgress -StatusMessage "Installerer $appvendor $appname $appversion"
 		
         ## <Perform Pre-Installation tasks here>
-        Stop-Process sapgui
-		Stop-Process saplogon
+        Stop-Process sapgui -ErrorAction SilentlyContinue
+		Stop-Process saplogon -ErrorAction SilentlyContinue
 		
 		
         ##*===============================================
