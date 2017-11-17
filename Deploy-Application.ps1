@@ -123,7 +123,7 @@ Try {
         
 		
         ## Show Progress Message (with the default message)
-        Show-InstallationProgress -StatusMessage 'Installerer SAP GUI...'
+        Show-InstallationProgress -StatusMessage "Installerer $appvendor $appname $appversion"
 		
         ## <Perform Pre-Installation tasks here>
 		
