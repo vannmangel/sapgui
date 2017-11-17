@@ -172,15 +172,18 @@ Try {
         [string]$installPhase = 'Pre-Uninstallation'
 		
         ## Show Welcome Message, close Internet Explorer with a 60 second countdown before automatically closing
-        if (get-process sapgui,saplogon -ErrorAction SilentlyContinue) {
+        if (get-process sapgui, saplogon -ErrorAction SilentlyContinue) {
             Show-InstallationWelcome -CloseApps 'sapgui,saplogon'
         }
+        
 		
         ## Show Progress Message (with the default message)
         Show-InstallationProgress
 		
         ## <Perform Pre-Uninstallation tasks here>
-		
+        if (get-process sapgui, saplogon -ea SilentlyContinue -ov sapProcesses) {
+            stop-process $sapProcess
+        }
 		
         ##*===============================================
         ##* UNINSTALLATION
