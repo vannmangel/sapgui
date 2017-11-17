@@ -136,7 +136,7 @@ Try {
 		
         ## <Perform Installation tasks here>
         gci $dirFiles -ov exeFiles
-        $sap = $exeFiles | ? Name -like "SAP*"
+        $sap = $exeFiles | ? Name -like "SAP_GUI*"
         $patch = $exeFiles | ? Name -like "patch*"
         Execute-Process -Path "$dirFiles\$($sap)" -Parameters '/silent'
         Show-InstallationProgress -StatusMessage 'Installerer oppdateringer til SAP GUI...'
