@@ -45,7 +45,8 @@ Param (
 	[Parameter(Mandatory=$false)]
 	[switch]$TerminalServerMode = $false,
 	[Parameter(Mandatory=$false)]
-	[switch]$DisableLogging = $false
+	[switch]$DisableLogging = $false,
+	[switch]$test = $false
 )
 
 Try {
@@ -56,15 +57,15 @@ Try {
 	##* VARIABLE DECLARATION
 	##*===============================================
 	## Variables: Application
-	[string]$appVendor = ''
-	[string]$appName = ''
-	[string]$appVersion = ''
-	[string]$appArch = ''
+	[string]$appVendor = 'SAP'
+	[string]$appName = 'GUI'
+	[string]$appVersion = '7.40'
+	[string]$appArch = 'x86'
 	[string]$appLang = 'EN'
 	[string]$appRevision = '01'
 	[string]$appScriptVersion = '1.0.0'
-	[string]$appScriptDate = '02/12/2017'
-	[string]$appScriptAuthor = '<author name>'
+	[string]$appScriptDate = '11/17/2017'
+	[string]$appScriptAuthor = 'Stian M. Olsen / CTGlobal'
 	##*===============================================
 	## Variables: Install Titles (Only set here to override defaults set by the toolkit)
 	[string]$installName = ''
@@ -112,7 +113,11 @@ Try {
         [string]$installPhase = 'Pre-Installation'
 		
         ## Show Welcome Message, close Internet Explorer if required, allow up to 3 deferrals, verify there is enough disk space to complete the install, and persist the prompt
-        if (get-process sapgui) {
+        if ($test) {
+            Execute-ProcessAsUser 'iexplore';
+            Show-InstallationWelcome -CloseApps 'iexplore' -AllowDefer -DeferTimes 3 -CheckDiskSpace -PersistPrompt -CustomText "Hei! Vi ser at prosessen for SAP GUI fortsatt kjører.`nVennligst lukk SAP GUI og forsøk på nytt."
+		}
+        if (get-process sapgui -ErrorAction SilentlyContinue) {
             Show-InstallationWelcome -CloseApps 'sapgui' -AllowDefer -DeferTimes 3 -CheckDiskSpace -PersistPrompt -CustomText "Hei! Vi ser at prosessen for SAP GUI fortsatt kjører.`nVennligst lukk SAP GUI og forsøk på nytt."
         }
         
@@ -135,7 +140,7 @@ Try {
         }
 		
         ## <Perform Installation tasks here>
-        gci $dirFiles -ov exeFiles
+        $exeFiles = gci $dirFiles
         $sap = $exeFiles | ? Name -like "SAP_GUI*"
         $patch = $exeFiles | ? Name -like "patch*"
         Execute-Process -Path "$dirFiles\$($sap)" -Parameters '/silent'
@@ -161,7 +166,9 @@ Try {
         [string]$installPhase = 'Pre-Uninstallation'
 		
         ## Show Welcome Message, close Internet Explorer with a 60 second countdown before automatically closing
-        Show-InstallationWelcome -CloseApps 'iexplore' -CloseAppsCountdown 60
+        if (get-process sapgui -ErrorAction SilentlyContinue) {
+            Show-InstallationWelcome -CloseApps 'sapgui' -AllowDefer -DeferTimes 3 -CheckDiskSpace -PersistPrompt -CustomText "Hei! Vi ser at prosessen for SAP GUI fortsatt kjører.`nVennligst lukk SAP GUI og forsøk på nytt."
+        }
 		
         ## Show Progress Message (with the default message)
         Show-InstallationProgress
@@ -175,16 +182,16 @@ Try {
         [string]$installPhase = 'Uninstallation'
 		
         ## Handle Zero-Config MSI Uninstallations
-       #If ($useDefaultMsi) {
-       #    [hashtable]$ExecuteDefaultMSISplat = @{ Action = 'Uninstall'; Path = $defaultMsiFile }; If ($defaultMstFile) { $ExecuteDefaultMSISplat.Add('Transform', $defaultMstFile) }
-       #    Execute-MSI @ExecuteDefaultMSISplat
-       #}
+        #If ($useDefaultMsi) {
+        #    [hashtable]$ExecuteDefaultMSISplat = @{ Action = 'Uninstall'; Path = $defaultMsiFile }; If ($defaultMstFile) { $ExecuteDefaultMSISplat.Add('Transform', $defaultMstFile) }
+        #    Execute-MSI @ExecuteDefaultMSISplat
+        #}
 		
         # <Perform Uninstallation tasks here>
         $NwSapSetup = ${env:ProgramFiles(x86)} + '\SAP\SAPSetup\Setup\NWSAPSetup.exe'
         if (Test-Path $NwSapSetup) {
             Execute-Process -Path $NWSapSetup -Parameters '/uninstall /product=SRX+SCRIPTED+SCE+ECL+VEV3D+SAPDTS+KW+GUIISHMED+JNet+NWBCGUI+NWBC65+SAPGUI /TitleComponent:SAPGUI /IgnoreMissingProducts /Silent' -IgnoreExitCodes '129'	
-		}
+        }
         
 		
         ##*===============================================
@@ -193,6 +200,13 @@ Try {
         [string]$installPhase = 'Post-Uninstallation'
 		
         ## <Perform Post-Uninstallation tasks here>
+        #move log files to appdata
+        Copy-File -Path "${env:ProgramFiles(x86)}\SAP\SAPSetup\LOGs" -Destination "C:\users\$((get-loggedonuser | ? SessionName -eq 'Console').username)\AppData\Roaming\SAP\Logs" -Recurse
+        #cleanup in program files		
+        Remove-item -Path "${env:ProgramFiles(x86)}\SAP\" -Recurse
+        #remove saplogon.ini from appdata
+        Remove-Item "C:\users\$((get-loggedonuser | ? SessionName -eq 'Console').username)\AppData\Roaming\SAP\Common\saplogon.ini"
+		
 		
 		
     }
