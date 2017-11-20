@@ -129,10 +129,12 @@ Try {
         Show-InstallationProgress -StatusMessage "Installerer $appvendor $appname $appversion"
 		
         ## <Perform Pre-Installation tasks here>
-        if (get-process sapgui, saplogon -ea SilentlyContinue -ov sapProcesses) {
-			stop-process $sapProcess
-		}
-		
+        get-process sapgui, saplogon -ea SilentlyContinue | Stop-Process -ErrorAction SilentlyContinue
+        #if (get-process sapgui, saplogon -ea SilentlyContinue -ov sapProcesses) {
+        #stop-process $sapProcess
+        #}
+        
+        
 		
         ##*===============================================
         ##* INSTALLATION 
@@ -147,8 +149,8 @@ Try {
 		
         ## <Perform Installation tasks here>
         $exeFiles = gci $dirFiles
-        $sap = $exeFiles | ? Name -like "SAP_GUI*"
-        $patch = $exeFiles | ? Name -like "patch*"
+        $sap = $exeFiles | Where Name -like "SAP_GUI*"
+        $patch = $exeFiles | Where Name -like "patch*"
         Execute-Process -Path "$dirFiles\$($sap)" -Parameters '/silent'
         Show-InstallationProgress -StatusMessage "Installerer oppdateringer til $appvendor $appname $appversion"
         Execute-Process -Path "$dirFiles\$($patch)" -Parameters '/silent'
@@ -159,7 +161,7 @@ Try {
         [string]$installPhase = 'Post-Installation'
 		
         ## <Perform Post-Installation tasks here>
-        Copy-File "$dirFiles\saplogon.ini" -Destination "C:\users\$((get-loggedonuser | ? IsCurrentSession -eq $true).username)\AppData\Roaming\SAP\Common"
+        Copy-File "$dirFiles\saplogon.ini" -Destination "C:\users\$((get-loggedonuser | Where IsCurrentSession -eq $true).username)\AppData\Roaming\SAP\Common"
         ## Display a message at the end of the install
         If (-not $useDefaultMsi) { 
             Show-InstallationPrompt -Message 'Installasjonen er ferdig!' -ButtonRightText 'OK' -Icon Information -NoWait 
@@ -210,11 +212,11 @@ Try {
 		
         ## <Perform Post-Uninstallation tasks here>
         #move log files to appdata
-        Copy-File -Path "${env:ProgramFiles(x86)}\SAP\SAPSetup\LOGs" -Destination "C:\users\$((get-loggedonuser | ? IsCurrentSession -eq $true).username)\AppData\Roaming\SAP\Logs" -Recurse
+        Copy-File -Path "${env:ProgramFiles(x86)}\SAP\SAPSetup\LOGs" -Destination "C:\users\$((get-loggedonuser | Where IsCurrentSession -eq $true).username)\AppData\Roaming\SAP\Logs" -Recurse
         #cleanup in program files		
         Remove-item -Path "${env:ProgramFiles(x86)}\SAP\" -Recurse
         #remove saplogon.ini from appdata
-        Remove-Item "C:\users\$((get-loggedonuser | ? IsCurrentSession -eq $true).username)\AppData\Roaming\SAP\Common\saplogon.ini"
+        Remove-Item "C:\users\$((get-loggedonuser | Where IsCurrentSession -eq $true).username)\AppData\Roaming\SAP\Common\saplogon.ini"
 	
     }
 	
