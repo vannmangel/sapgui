@@ -114,7 +114,7 @@ Try {
 		
         ## Show Welcome Message, close Internet Explorer if required, allow up to 3 deferrals, verify there is enough disk space to complete the install, and persist the prompt
         if ($test) {
-            Execute-ProcessAsUser -path "$env:windir\system32\notepad.exe"
+            Execute-ProcessAsUser -path "C:\Program Files\internet explorer\iexplore.exe"
             Show-InstallationWelcome -CloseApps 'iexplore' -AllowDefer -DeferTimes 3 -CloseAppsCountdown 3600 
         }
         if (get-process sapgui, saplogon -ErrorAction SilentlyContinue) {
